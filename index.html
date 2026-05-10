@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Puck Bowling</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="ui">
+        <h1>Puck Bowling</h1>
+        <p>Grab the hitter and smash the puck!</p>
+        <div class="control-group">
+            <label for="puck-x">Puck Left/Right:</label>
+            <input type="range" id="puck-x" min="-4" max="4" step="0.1" value="0">
+            <label for="puck-z">Puck Distance:</label>
+            <input type="range" id="puck-z" min="5" max="20" step="0.5" value="12">
+        </div>
+        <div id="score-display">Pins Down: <span id="score-val">0</span> / 10</div>
+        <button id="reset-btn">Reset Pins</button>
+    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+            }
+        }
+    </script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>

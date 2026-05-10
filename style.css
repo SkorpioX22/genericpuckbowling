@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #111;
+}
+
+canvas {
+    display: block;
+}
+
+#ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    pointer-events: none;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#ui h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.control-group {
+    margin: 15px 0;
+    pointer-events: auto;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#puck-pos {
+    width: 200px;
+}
+
+#score-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #ffd700;
+}
+
+#reset-btn {
+    pointer-events: auto;
+    background: #ff4757;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+#reset-btn:hover {
+    background: #ff6b81;
+}
