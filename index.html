@@ -16,8 +16,13 @@
             <label for="puck-z">Puck Distance:</label>
             <input type="range" id="puck-z" min="5" max="20" step="0.5" value="12">
         </div>
-        <div id="score-display">Pins Down: <span id="score-val">0</span> / 10</div>
-        <button id="reset-btn">Reset Pins</button>
+        <div id="score-display">
+            <div>Round: <span id="round-val">1</span> / 2</div>
+            <div style="color: #ff9900;">Time Remaining: <span id="time-val">10</span>s</div>
+            <div>Pins Down: <span id="score-val">0</span></div>
+            <div style="color: #00ff00; margin-top: 5px;">Total Score: <span id="total-val">0</span> / 12 Goal</div>
+        </div>
+        <button id="reset-btn">Reset Game</button>
     </div>
     <script type="importmap">
         {

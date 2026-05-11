@@ -42,7 +42,7 @@ const pinMat = new CANNON.Material('pin');
 const hitterMat = new CANNON.Material('hitter');
 
 world.addContactMaterial(new CANNON.ContactMaterial(floorMat, puckMat, { friction: 0.1, restitution: 0.0 }));
-world.addContactMaterial(new CANNON.ContactMaterial(floorMat, pinMat, { friction: 0.5, restitution: 0.0 }));
+world.addContactMaterial(new CANNON.ContactMaterial(floorMat, pinMat, { friction: 0.5, restitution: 0.05 }));
 world.addContactMaterial(new CANNON.ContactMaterial(puckMat, pinMat, { friction: 0.3, restitution: 0.2 }));
 world.addContactMaterial(new CANNON.ContactMaterial(hitterMat, puckMat, { friction: 0.2, restitution: 0.1 }));
 
@@ -120,7 +120,7 @@ spawnPins();
 const puckMesh = new THREE.Mesh(new THREE.CylinderGeometry(PUCK_RADIUS, PUCK_RADIUS, PUCK_HEIGHT, 32), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
 puckMesh.castShadow = true;
 const puckBody = new CANNON.Body({ 
-    mass: 15.0, // MASSIVE WEIGHT
+    mass: 15.0,
     shape: new CANNON.Sphere(PUCK_RADIUS), 
     material: puckMat, 
     linearDamping: 0.1, 
@@ -150,6 +150,13 @@ const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let isDragging = false, lastTime = performance.now();
 const targetPos = new THREE.Vector3(0, HITTER_RADIUS, 22);
 
+// --- Game State ---
+let currentRound = 1;
+let totalScore = 0;
+let timeLeft = 10;
+let timerStarted = false;
+let timerInterval = null;
+
 window.addEventListener('mousedown', (e) => {
     mouse.x = (e.clientX/window.innerWidth)*2-1;
     mouse.y = -(e.clientY/window.innerHeight)*2+1;
@@ -166,12 +173,25 @@ window.addEventListener('mousemove', (e) => {
     raycaster.ray.intersectPlane(dragPlane, pt);
     targetPos.x = Math.max(-LANE_WIDTH/2 + HITTER_RADIUS, Math.min(LANE_WIDTH/2 - HITTER_RADIUS, pt.x));
     targetPos.z = Math.max(5, Math.min(LANE_LENGTH/2, pt.z));
+    
+    // Start timer on first drag
+    if (!timerStarted) {
+        timerStarted = true;
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                document.getElementById('time-val').innerText = timeLeft;
+            } else {
+                clearInterval(timerInterval);
+                endRound();
+            }
+        }, 1000);
+    }
 });
 
 window.addEventListener('mouseup', () => { isDragging = false; hitterBody.velocity.set(0,0,0); });
 
-document.getElementById('reset-btn').addEventListener('click', () => {
-    spawnPins();
+function resetPuckAndHitter() {
     const xPos = parseFloat(document.getElementById('puck-x').value || 0);
     const zPos = parseFloat(document.getElementById('puck-z').value || 12);
     puckBody.position.set(xPos, PUCK_RADIUS, zPos);
@@ -180,6 +200,19 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     targetPos.set(0, HITTER_RADIUS, 22);
     hitterBody.position.set(0, HITTER_RADIUS, 22);
     hitterBody.velocity.set(0,0,0);
+    timeLeft = 10;
+    timerStarted = false;
+    document.getElementById('time-val').innerText = '10';
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    currentRound = 1;
+    totalScore = 0;
+    document.getElementById('round-val').innerText = '1';
+    document.getElementById('total-val').innerText = '0';
+    spawnPins();
+    resetPuckAndHitter();
 });
 
 document.getElementById('puck-x').addEventListener('input', (e) => {
@@ -191,6 +224,27 @@ document.getElementById('puck-z').addEventListener('input', (e) => {
     puckBody.position.z = parseFloat(e.target.value);
     puckBody.velocity.set(0,0,0);
 });
+
+function endRound() {
+    let knockedCount = 0;
+    pins.forEach(p => {
+        const up = new THREE.Vector3(0, 1, 0);
+        up.applyQuaternion(p.mesh.quaternion);
+        if (up.y < 0.85) knockedCount++;
+    });
+
+    if (currentRound === 1) {
+        totalScore += knockedCount;
+        currentRound = 2;
+        document.getElementById('round-val').innerText = '2';
+        spawnPins();
+        resetPuckAndHitter();
+    } else {
+        const final = totalScore + knockedCount;
+        alert(`Game Over! Final Score: ${final} / 12`);
+        document.getElementById('reset-btn').click();
+    }
+}
 
 function animate() {
     requestAnimationFrame(animate);
@@ -210,7 +264,6 @@ function animate() {
             hitterBody.velocity.set(vx, 0, vz);
         }
     } else {
-        // Safe damping
         hitterBody.velocity.x *= 0.9;
         hitterBody.velocity.z *= 0.9;
     }
@@ -224,23 +277,16 @@ function animate() {
             o.mesh.quaternion.set(0, 0, 0, 1);
         } else {
             o.mesh.quaternion.copy(o.body.quaternion);
-            
-            // Check if it's a pin and if it's knocked over
             if (pins.includes(o)) {
-                // Get the up vector of the pin mesh (0,1,0) and rotate it by current quaternion
                 const up = new THREE.Vector3(0, 1, 0);
                 up.applyQuaternion(o.mesh.quaternion);
-                // If y component is small, the pin is tilted/down (threshold refined)
-                if (up.y < 0.85) {
-                    knockedCount++;
-                }
+                if (up.y < 0.85) knockedCount++;
             }
         }
     });
     
-    // Update score display
-    const scoreVal = document.getElementById('score-val');
-    if (scoreVal) scoreVal.innerText = knockedCount;
+    document.getElementById('score-val').innerText = knockedCount;
+    document.getElementById('total-val').innerText = (totalScore + knockedCount);
 
     renderer.render(scene, camera);
 }
